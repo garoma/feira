@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Controle de Vendas</title>
+<title> </title>
 <style>
 :root{--bg:#f3f5f2;--card:#fff;--ink:#1d2a24;--mut:#64736b;--line:#dbe2dd;--pri:#1f6b4f;--priInk:#fff;--ok:#1f6b4f;--warn:#b7791f;--bad:#b4432f;--okbg:#e1f1e8;--warnbg:#faefd6;--badbg:#f7e0da;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -43,7 +43,6 @@ td input{padding:5px 6px}
 </head>
 <body>
 <main>
-<h1>Controle de Vendas</h1>
 <div id="warn" hidden style="background:var(--badbg);color:var(--bad);padding:8px 12px;border-radius:8px;margin-bottom:12px">Atenção: este navegador bloqueou o armazenamento local, então os dados não serão mantidos ao fechar a página. Use o Backup (CSV) para não perder nada.</div>
 
 <div class="sum" id="sum"></div>
@@ -51,7 +50,6 @@ td input{padding:5px 6px}
 <section class="card">
 <h2 id="ftitle">Nova venda</h2>
 <form id="f">
-<label>Nome<input id="nome" required></label>
 <label>Produto<input id="produto" required></label>
 <label>Preço (R$)<input id="preco" type="number" step="0.01" min="0" required></label>
 <label>Qtde<input id="qtde" type="number" step="1" min="1" value="1" required></label>
@@ -63,12 +61,12 @@ td input{padding:5px 6px}
 
 <section class="card">
 <div class="bar">
-<input id="q" placeholder="Buscar por nome ou produto">
+<input id="q" placeholder="Buscar por produto">
 <select id="fs"><option value="">Todos</option><option>Pendente</option><option>Parcial</option><option>Quitado</option></select>
 <button id="csv">Relatório CSV</button><button id="bk">Backup (CSV)</button><button id="rs">Restaurar backup</button><input type="file" id="rf" accept=".csv,text/csv" hidden>
 </div>
 <div class="wrap"><table>
-<thead><tr><th>Nome</th><th>Produto</th><th class="n">Preço</th><th class="n">Qtde</th><th class="n">Total</th><th>Data venda</th><th>Ações</th></tr></thead>
+<thead><tr><th>Produto</th><th class="n">Preço</th><th class="n">Qtde</th><th class="n">Total</th><th>Data venda</th><th>Ações</th></tr></thead>
 <tbody id="rows"></tbody>
 </table></div>
 </section>
@@ -93,7 +91,7 @@ $('data').value=today();
 
 $('f').addEventListener('submit',e=>{
   e.preventDefault();
-  const d={nome:$('nome').value.trim(),produto:$('produto').value.trim(),preco:+$('preco').value,qtde:+$('qtde').value};
+  const d={produto:$('produto').value.trim(),preco:+$('preco').value,qtde:+$('qtde').value};
   if(editId){
     const es=sales.find(s=>s.id===editId);
     Object.assign(es,d);
@@ -114,13 +112,13 @@ $('q').oninput=$('fs').onchange=()=>render();
 
 function render(){
   const q=$('q').value.toLowerCase(),fs=$('fs').value;
-  const list=sales.filter(s=>(!fs||status(s)===fs)&&(s.nome+' '+s.produto).toLowerCase().includes(q));
+  const list=sales.filter(s=>(!fs||status(s)===fs)&&s.produto.toLowerCase().includes(q));
   const T=sales.reduce((a,s)=>a+tot(s),0);
   $('sum').innerHTML=`<div class="big"><small>Total vendido</small><b>${brl(T)}</b></div>`;
-  if(!list.length){$('rows').innerHTML=`<tr><td colspan="7" class="empty">Nenhuma venda encontrada. Cadastre a primeira no formulário acima.</td></tr>`;return}
+  if(!list.length){$('rows').innerHTML=`<tr><td colspan="6" class="empty">Nenhuma venda encontrada. Cadastre a primeira no formulário acima.</td></tr>`;return}
   $('rows').innerHTML=list.map(s=>{
     const ult=s.pagamentos.map(p=>p.data).sort().pop()||'';
-    return `<tr data-id="${s.id}"><td>${esc(s.nome)}</td><td>${esc(s.produto)}</td><td class="n">${brl(s.preco)}</td><td class="n">${s.qtde}</td><td class="n"><b>${brl(tot(s))}</b></td>
+    return `<tr data-id="${s.id}"><td>${esc(s.produto)}</td><td class="n">${brl(s.preco)}</td><td class="n">${s.qtde}</td><td class="n"><b>${brl(tot(s))}</b></td>
     <td><input type="date" id="pd-${s.id}" value="${s.dataPag||ult||today()}" style="width:140px" title="Data da venda (fica salva)"></td>
     <td><div class="acts"><button data-act="edit">Editar</button><button class="del" data-act="del">Excluir</button></div></td></tr>`;
   }).join('');
@@ -131,12 +129,12 @@ $('rows').addEventListener('click',e=>{
   const id=b.closest('tr').dataset.id;
   const s=sales.find(x=>x.id===id);const act=b.dataset.act;
   if(act==='edit'){
-    editId=id;$('nome').value=s.nome;$('produto').value=s.produto;$('preco').value=s.preco;$('qtde').value=s.qtde;calcTotal();
+    editId=id;$('produto').value=s.produto;$('preco').value=s.preco;$('qtde').value=s.qtde;calcTotal();
     $('ftitle').textContent='Editar venda';$('btn').textContent='Salvar alterações';$('cancel').hidden=false;
     $('l-data').hidden=false;$('data').value=s.dataPag||s.pagamentos.map(p=>p.data).sort().pop()||today();
-    scrollTo({top:0,behavior:'smooth'});$('nome').focus();
+    scrollTo({top:0,behavior:'smooth'});$('produto').focus();
   }else if(act==='del'){
-    if(confirm('Excluir a venda de '+s.nome+'?')){sales=sales.filter(x=>x.id!==id);if(editId===id)resetForm();save();render()}
+    if(confirm('Excluir a venda de '+s.produto+'?')){sales=sales.filter(x=>x.id!==id);if(editId===id)resetForm();save();render()}
   }
 });
 $('rows').addEventListener('change',e=>{
@@ -150,14 +148,14 @@ const dl=(name,txt)=>{const a=document.createElement('a');a.href=URL.createObjec
 const toCSV=r=>r.map(l=>l.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(';')).join('\n');
 
 $('csv').onclick=()=>{
-  const r=[['Nome','Produto','Preço','Qtde','Total','Total pago','Saldo','Status']].concat(sales.map(s=>[s.nome,s.produto,s.preco,s.qtde,tot(s),pago(s),saldo(s),status(s)]));
+  const r=[['Produto','Preço','Qtde','Total','Total pago','Saldo','Status']].concat(sales.map(s=>[s.produto,s.preco,s.qtde,tot(s),pago(s),saldo(s),status(s)]));
   dl('vendas.csv',toCSV(r));
 };
 $('bk').onclick=()=>{
-  const r=[['id','nome','produto','preco','qtde','data_pagamento','valor_pago','data_ref']];
+  const r=[['id','produto','preco','qtde','data_pagamento','valor_pago','data_ref']];
   sales.forEach(s=>{
-    if(!s.pagamentos.length)r.push([s.id,s.nome,s.produto,s.preco,s.qtde,'','',s.dataPag||'']);
-    else s.pagamentos.forEach(p=>r.push([s.id,s.nome,s.produto,s.preco,s.qtde,p.data,p.valor,s.dataPag||'']));
+    if(!s.pagamentos.length)r.push([s.id,s.produto,s.preco,s.qtde,'','',s.dataPag||'']);
+    else s.pagamentos.forEach(p=>r.push([s.id,s.produto,s.preco,s.qtde,p.data,p.valor,s.dataPag||'']));
   });
   dl('backup-vendas-'+today()+'.csv',toCSV(r));
 };
@@ -185,15 +183,15 @@ $('rf').onchange=e=>{
       const rows=parseCSV(String(rd.result));
       const h=(rows.shift()||[]).map(x=>x.trim().toLowerCase());
       const ix=n=>h.indexOf(n);
-      ['nome','produto','preco','qtde'].forEach(n=>{if(ix(n)<0)throw new Error('coluna "'+n+'" não encontrada. Use um arquivo gerado por "Backup (CSV)".')});
+      ['produto','preco','qtde'].forEach(n=>{if(ix(n)<0)throw new Error('coluna "'+n+'" não encontrada. Use um arquivo gerado por "Backup (CSV)".')});
       const num=v=>+String(v).replace(',','.');
       const dt=s=>/^\d{2}\/\d{2}\/\d{4}$/.test(s)?s.split('/').reverse().join('-'):s;
       const map=new Map();
       rows.forEach(r=>{
         const g=n=>ix(n)<0?'':(r[ix(n)]||'').trim();
-        const d={nome:g('nome'),produto:g('produto'),preco:num(g('preco')),qtde:num(g('qtde'))};
-        if(!d.nome||!(d.preco>=0)||!(d.qtde>0))return;
-        const key=g('id')||[d.nome,d.produto,d.preco,d.qtde].join('|');
+        const d={produto:g('produto'),preco:num(g('preco')),qtde:num(g('qtde'))};
+        if(!d.produto||!(d.preco>=0)||!(d.qtde>0))return;
+        const key=g('id')||[d.produto,d.preco,d.qtde].join('|');
         if(!map.has(key))map.set(key,{id:g('id')||uid(),...d,dataPag:dt(g('data_ref'))||undefined,pagamentos:[]});
         const v=num(g('valor_pago'));
         if(v>0)map.get(key).pagamentos.push({id:uid(),data:dt(g('data_pagamento'))||today(),valor:v});
